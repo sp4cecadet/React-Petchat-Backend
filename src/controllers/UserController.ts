@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
-import { UserModel } from "../schemas/";
-import { IUser } from "../schemas/User";
+import { UserModel } from "../models/";
+import { IUser } from "../models/User";
 
 class UserController {
   index(req: Request, res: Response) {
