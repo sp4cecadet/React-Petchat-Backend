@@ -9,18 +9,23 @@ import {
 
 const bodyParser = require("body-parser");
 
+import { updateLastSeen, checkAuth } from "./middlewares/";
+import { LoginValidation, RegisterValidation } from "./utils/validations";
+
 const app = express();
-const PORT = 3000;
-const DBNAME = "chat";
 
 const User = new UserController();
 const Dialog = new DialogController();
 const Message = new MessageController();
 
+require("dotenv").config();
+
 app.use(bodyParser.json());
+app.use(updateLastSeen);
+app.use(checkAuth);
 
 mongoose.connect(
-  "mongodb://localhost:27017/" + DBNAME,
+  "mongodb://localhost:27017/" + process.env.DBNAME,
   {
     useCreateIndex: true,
     useNewUrlParser: true,
@@ -28,13 +33,16 @@ mongoose.connect(
     useFindAndModify: false,
   },
   () => {
-    console.log("[MONGODB]:", DBNAME, "AIR");
+    console.log("[MONGODB]:", process.env.DBNAME, "AIR");
   }
 );
 
 // User requests block
+app.get("/user/me", User.getMe);
 app.get("/user/:id", User.index);
-app.post("/user/register", User.register);
+app.get("/verify", User.verify);
+app.post("/signup", RegisterValidation, User.register);
+app.post("/signin", LoginValidation, User.login);
 app.delete("/user/:id", User.delete);
 // =====================
 
@@ -50,6 +58,6 @@ app.post("/message", Message.create);
 app.delete("/message/:id", Message.delete);
 // =====================
 
-app.listen(PORT, () => {
-  console.log("[SERVER]: AIR at", PORT);
+app.listen(process.env.PORT, () => {
+  console.log("[SERVER]: AIR at", process.env.PORT);
 });
