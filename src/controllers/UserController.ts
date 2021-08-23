@@ -25,7 +25,6 @@ class UserController {
     const id: string = req.user._id;
     UserModel.findById(id)
       .then((user: IUser | null) => {
-        console.log(user);
         res.json(user);
       })
       .catch(() =>
@@ -41,8 +40,6 @@ class UserController {
       fullname: req.body.fullname,
       password: req.body.password,
     };
-
-    console.log(postData);
 
     const errors = validationResult(req);
 
@@ -65,8 +62,6 @@ class UserController {
             function (err: Error | null, info: SentMessageInfo) {
               if (err) {
                 console.log(err);
-              } else {
-                console.log(info);
               }
             }
           );
