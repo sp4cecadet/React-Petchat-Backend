@@ -39,6 +39,7 @@ mongoose.connect(
 
 // User requests block
 app.get("/user/me", User.getMe);
+app.get("/user/find", User.findUsers);
 app.get("/user/:id", User.index);
 app.get("/verify", User.verify);
 app.post("/signup", RegisterValidation, User.register);

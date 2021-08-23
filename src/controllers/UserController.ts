@@ -34,6 +34,22 @@ class UserController {
       );
   }
 
+  findUsers = (req: Request, res: Response): void => {
+    const query: any = req.query.query;
+    UserModel.find()
+      .or([
+        { fullname: new RegExp(query, "i") },
+        { email: new RegExp(query, "i") },
+      ])
+      .then((users: IUser[]) => res.json(users))
+      .catch((err: any) => {
+        return res.status(404).json({
+          status: "error",
+          message: err,
+        });
+      });
+  };
+
   register(req: Request, res: Response) {
     const postData: { email: string; fullname: string; password: string } = {
       email: req.body.email,
