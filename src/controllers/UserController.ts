@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { validationResult, Result, ValidationError } from "express-validator";
 import bcrypt from "bcrypt";
 import { SentMessageInfo } from "nodemailer/lib/sendmail-transport";
+import socket from "socket.io";
 
 import { UserModel } from "../models/";
 import { IUser } from "../models/User";
@@ -10,6 +11,12 @@ import mailer from "../core/mailer";
 import { RequestUserExtended } from "../types";
 
 class UserController {
+  io: socket.Server;
+
+  constructor(io: socket.Server) {
+    this.io = io;
+  }
+
   index(req: Request, res: Response) {
     const id: string = req.params.id;
     UserModel.findById(id)

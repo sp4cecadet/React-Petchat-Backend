@@ -3,10 +3,13 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IMessage extends Document {
   text: String;
   readed: Boolean;
-  sender: Schema.Types.ObjectId;
   dialog: {
     type: Schema.Types.ObjectId;
     ref: "Dialog";
+  };
+  sender: {
+    type: Schema.Types.ObjectId;
+    ref: "User";
   };
 }
 
@@ -24,7 +27,7 @@ const MessageSchema = new Schema(
       ref: "User",
       required: true,
     },
-    // attachments:
+    attachments: [{ type: Schema.Types.ObjectId, ref: "UploadFile" }],
   },
   {
     timestamps: true,

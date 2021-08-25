@@ -1,50 +1,172 @@
-import { Request, Response } from "express";
-import { MessageModel } from "../models/";
+import { ErrorRequestHandler, Request, Response } from "express";
+import { Mongoose, ObjectId } from "mongoose";
+import socket from "socket.io";
+import { DialogModel, MessageModel } from "../models/";
+import { IDialog } from "../models/Dialog";
 import { IMessage } from "../models/Message";
+import { RequestUserExtended } from "../types";
 
 class MessageController {
-  index(req: Request, res: Response) {
-    const dialogId: any = req.params.id;
+  io: socket.Server;
 
-    MessageModel.find({ dialog: dialogId })
-      .populate(["dialog"])
-      .then((dialog: IMessage[] | null) => {
-        res.json(dialog);
-      })
-      .catch((err) => {
-        res.status(404).json({ message: "Нет сообщений" });
-      });
+  constructor(io: socket.Server) {
+    this.io = io;
   }
 
-  create(req: Request, res: Response) {
-    const userId = "61220551201ec70700ecfd02";
+  updateReadStatus = (
+    res: Response,
+    senderId: ObjectId | string,
+    dialogId: IDialog["_id"]
+  ): void => {
+    MessageModel.updateMany(
+      { dialog: dialogId, user: { $ne: senderId } },
+      { $set: { readed: true } }
+    )
+      .then(() => {
+        this.io.emit("SERVER:MESSAGES_READED", {
+          senderId,
+          dialogId,
+        });
+      })
+      .catch((err) => {
+        console.log("readstatus[ERROR]: ", err);
+        res.status(500).json({
+          status: "error",
+          message: err,
+        });
+      });
+  };
+
+  index = (req: RequestUserExtended, res: Response): void => {
+    const dialogId: any = req.query.dialog;
+    const senderId: string = req.user._id;
+
+    this.updateReadStatus(res, senderId, dialogId);
+
+    MessageModel.find({ dialog: dialogId })
+      .populate(["dialog", "user", "attachments"])
+      .exec(function (err, messages) {
+        if (err) {
+          return res.status(404).json({
+            status: "error",
+            message: "Messages not found",
+          });
+        }
+        res.json(messages);
+      });
+  };
+
+  create(req: RequestUserExtended, res: Response) {
+    const senderId = req.user._id;
 
     const postData = {
+      sender: senderId,
       text: req.body.text,
-      sender: userId,
-      dialog: req.body.dialog,
+      dialog: req.body.dialog_id,
+      attachments: req.body.attachments,
     };
 
     const message = new MessageModel(postData);
 
+    this.updateReadStatus(res, senderId, req.body.dialog_id);
+
     message
       .save()
       .then((message: { [key: string]: any }) => {
-        return res.json(message);
+        message
+          .populate("Прикреплённые файлы")
+          .then(() => {
+            DialogModel.findOneAndUpdate(
+              { _id: postData.dialog },
+              { lastMessage: message._id },
+              { upsert: true }
+            )
+              .then(() => {
+                res.json(message);
+
+                this.io.emit("SERVER:NEW_MESSAGE", message);
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  status: "error",
+                  message: err,
+                });
+              });
+          })
+          .catch((err: ErrorRequestHandler) => {
+            res.status(500).json({
+              status: "error",
+              message: err,
+            });
+          });
       })
       .catch((err: { [key: string]: any }) => res.json(err.message));
   }
 
-  delete(req: Request, res: Response) {
-    const id: string = req.params.id;
-    MessageModel.findByIdAndRemove(id)
-      .then(() => {
-        res.json({ message: "Сообщение было удалёно" });
-      })
-      .catch(() => {
-        res.status(404).json({ message: "Сообщение не найдено" });
-      });
-  }
+  delete = (req: RequestUserExtended, res: Response): void => {
+    const id: any = req.query.id;
+    const userId: string = req.user._id;
+
+    MessageModel.findById(id, (err: ErrorRequestHandler, message: IMessage) => {
+      if (err || !message) {
+        return res.status(404).json({
+          status: "error",
+          message: "Message not found",
+        });
+      }
+
+      if (message.sender.toString() === userId) {
+        const dialogId = message.dialog;
+        message.remove();
+
+        MessageModel.findOne(
+          { dialog: dialogId },
+          {},
+          { sort: { created_at: -1 } },
+          (err, lastMessage) => {
+            if (err) {
+              res.status(500).json({
+                status: "error",
+                message: err,
+              });
+            }
+
+            DialogModel.findById(
+              dialogId,
+              (err: ErrorRequestHandler, dialog: IDialog) => {
+                if (err) {
+                  res.status(500).json({
+                    status: "error",
+                    message: err,
+                  });
+                }
+
+                if (!dialog) {
+                  return res.status(404).json({
+                    status: "Not found",
+                    message: err,
+                  });
+                }
+
+                dialog.lastMessage = lastMessage || undefined;
+                dialog.save();
+
+                res.json({
+                  status: "success",
+                  message: "Message deleted",
+                });
+              }
+            );
+          }
+        );
+      } else {
+        return res.status(403).json({
+          status: "error",
+          message: "Not have permission",
+        });
+      }
+    });
+  };
 }
 
 export default MessageController;

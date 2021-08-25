@@ -1,28 +1,19 @@
-import express from "express";
+import express, { NextFunction, Response } from "express";
+import { createServer } from "http";
 import mongoose from "mongoose";
 
-import {
-  UserController,
-  DialogController,
-  MessageController,
-} from "./controllers/";
+import dotenv from "dotenv";
 
-const bodyParser = require("body-parser");
+import createRoutes from "./core/routes";
+import createSocket from "./core/socket";
 
-import { updateLastSeen, checkAuth } from "./middlewares/";
-import { LoginValidation, RegisterValidation } from "./utils/validations";
+dotenv.config();
 
 const app = express();
+const http = createServer(app);
+const io = createSocket(http);
 
-const User = new UserController();
-const Dialog = new DialogController();
-const Message = new MessageController();
-
-require("dotenv").config();
-
-app.use(bodyParser.json());
-app.use(updateLastSeen);
-app.use(checkAuth);
+createRoutes(app, io);
 
 mongoose.connect(
   "mongodb://localhost:27017/" + process.env.DBNAME,
@@ -37,28 +28,6 @@ mongoose.connect(
   }
 );
 
-// User requests block
-app.get("/user/me", User.getMe);
-app.get("/user/find", User.findUsers);
-app.get("/user/:id", User.index);
-app.get("/verify", User.verify);
-app.post("/signup", RegisterValidation, User.register);
-app.post("/signin", LoginValidation, User.login);
-app.delete("/user/:id", User.delete);
-// =====================
-
-// Dialog requests block
-app.get("/dialogs", Dialog.index);
-app.post("/dialog", Dialog.create);
-app.delete("/dialog/:id", Dialog.delete);
-// =====================
-
-// Message requests block
-app.get("/messages/:id", Message.index);
-app.post("/message", Message.create);
-app.delete("/message/:id", Message.delete);
-// =====================
-
-app.listen(process.env.PORT, () => {
+http.listen(process.env.PORT, () => {
   console.log("[SERVER]: AIR at", process.env.PORT);
 });

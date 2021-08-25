@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { IMessage } from "./Message";
 
 export interface IDialog extends Document {
   author: {
@@ -9,19 +10,16 @@ export interface IDialog extends Document {
     type: Schema.Types.ObjectId;
     ref: "User";
   };
-  messages: [
-    {
-      type: Schema.Types.ObjectId;
-      ref: string;
-    }
-  ];
+  messages: IMessage[];
+  lastMessage: IMessage | string | undefined;
 }
 
 const DialogSchema = new Schema(
   {
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     partner: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    messages: [{ type: Schema.Types.ObjectId, ref: String }],
+    messages: Array,
+    lastMessage: { type: Schema.Types.ObjectId, ref: "Message" },
   },
   {
     timestamps: true,

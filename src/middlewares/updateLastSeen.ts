@@ -1,18 +1,21 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 
 import { UserModel } from "../models";
+import { RequestUserExtended } from "../types";
 
-export default (req: Request, res: Response, next: NextFunction) => {
-  const userId = "61220551201ec70700ecfd02";
-  UserModel.findOneAndUpdate(
-    {
-      _id: userId,
-    },
-    { fullname: "Galen Erso", last_seen: new Date() },
-    {
-      new: true,
-    },
-    () => {}
-  );
+export default (
+  req: RequestUserExtended,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.user) {
+    UserModel.findOneAndUpdate(
+      { _id: req.user.id },
+      {
+        last_seen: new Date(),
+      },
+      { new: true }
+    );
+  }
   next();
 };
