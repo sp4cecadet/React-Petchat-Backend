@@ -37,15 +37,15 @@ class MessageController {
       });
   };
 
-  index = (req: RequestUserExtended, res: Response): void => {
-    const dialogId: any = req.query.dialog;
-    const senderId: string = req.user._id;
+  index = (req: Request, res: Response): void => {
+    const dialogId: IDialog["_id"] = req.query.dialog;
+    const senderId: ObjectId | string = req.user._id;
 
     this.updateReadStatus(res, senderId, dialogId);
 
     MessageModel.find({ dialog: dialogId })
       .populate(["dialog", "user", "attachments"])
-      .exec(function (err, messages) {
+      .exec((err, messages) => {
         if (err) {
           return res.status(404).json({
             status: "error",
@@ -56,55 +56,57 @@ class MessageController {
       });
   };
 
-  create(req: RequestUserExtended, res: Response) {
-    const senderId = req.user._id;
+  create = (req: Request, res: Response): void => {
+    const userId: string = req.user._id;
 
     const postData = {
-      sender: senderId,
       text: req.body.text,
       dialog: req.body.dialog_id,
       attachments: req.body.attachments,
+      sender: userId,
     };
 
     const message = new MessageModel(postData);
 
-    this.updateReadStatus(res, senderId, req.body.dialog_id);
+    this.updateReadStatus(res, userId, req.body.dialog_id);
 
     message
       .save()
-      .then((message: { [key: string]: any }) => {
-        message
-          .populate("Прикреплённые файлы")
-          .then(() => {
-            DialogModel.findOneAndUpdate(
-              { _id: postData.dialog },
-              { lastMessage: message._id },
-              { upsert: true }
-            )
-              .then(() => {
-                res.json(message);
-
-                this.io.emit("SERVER:NEW_MESSAGE", message);
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  status: "error",
-                  message: err,
-                });
-              });
-          })
-          .catch((err: ErrorRequestHandler) => {
-            res.status(500).json({
+      .then((obj: IMessage) => {
+        obj.populate("Attachments", (err: any, message: IMessage) => {
+          if (err) {
+            return res.status(500).json({
               status: "error",
               message: err,
             });
-          });
+          }
+
+          DialogModel.findOneAndUpdate(
+            { _id: postData.dialog },
+            { lastMessage: message._id },
+            { upsert: true },
+            (err) => {
+              if (err) {
+                return res.status(500).json({
+                  status: "error",
+                  message: err,
+                });
+              }
+            }
+          );
+
+          res.json(message);
+
+          this.io.emit("SERVER:NEW_MESSAGE", message);
+        });
       })
-      .catch((err: { [key: string]: any }) => res.json(err.message));
-  }
+      .catch((reason) => {
+        res.json(reason);
+      });
+  };
 
   delete = (req: RequestUserExtended, res: Response): void => {
-    const id: any = req.query.id;
+    const id = req.query.id;
     const userId: string = req.user._id;
 
     MessageModel.findById(id, (err: ErrorRequestHandler, message: IMessage) => {
@@ -117,7 +119,9 @@ class MessageController {
 
       if (message.sender.toString() === userId) {
         const dialogId = message.dialog;
-        message.remove();
+        message
+          .remove()
+          .catch((err) => res.json({ message: "error", err: err.message }));
 
         MessageModel.findOne(
           { dialog: dialogId },
@@ -149,7 +153,11 @@ class MessageController {
                 }
 
                 dialog.lastMessage = lastMessage || undefined;
-                dialog.save();
+                dialog
+                  .save()
+                  .catch((err) =>
+                    res.json({ message: "error", err: err.message })
+                  );
 
                 res.json({
                   status: "success",

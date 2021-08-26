@@ -7,11 +7,7 @@ interface CustomRequest extends Request {
   user?: IUser;
 }
 
-export default (
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-): void => {
+export default (req: Request, res: Response, next: NextFunction): void => {
   if (
     req.path === "/signin" ||
     req.path === "/signup" ||
@@ -37,7 +33,7 @@ export default (
           .json({ message: "Ошибка токена. Попробуйте очистить cookies." });
       });
   } else {
-    res.json({
+    res.status(403).json({
       status: "error",
       message: "Ошибка токена. Попробуйте очистить cookies.",
     });

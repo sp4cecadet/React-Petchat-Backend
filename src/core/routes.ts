@@ -1,7 +1,6 @@
 import bodyParser from "body-parser";
-import { Express, NextFunction, Request, Response } from "express";
+import { Express, Request, Response } from "express";
 import socket from "socket.io";
-import cors from "cors";
 
 import { checkAuth, updateLastSeen } from "../middlewares";
 import {
@@ -28,12 +27,6 @@ const createRoutes = (app: Express, io: socket.Server) => {
   app.use(checkAuth);
   app.use(updateLastSeen);
 
-  app.use(
-    cors({
-      origin: "http://cors-anywhere.herokuapp.com/",
-      credentials: true,
-    })
-  );
   // User requests block
   app.get("/user/me", User.getMe);
   app.get("/user/find", User.findUsers);
@@ -58,7 +51,7 @@ const createRoutes = (app: Express, io: socket.Server) => {
 
   // Files requests block
   app.post("/files", multer.single("file"), File.create);
-  app.delete("/files", File.delete);
+  app.delete("/file", File.delete);
   // =====================
 };
 

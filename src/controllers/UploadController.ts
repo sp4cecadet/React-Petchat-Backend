@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { ErrorRequestHandler, Request, Response } from "express";
 import { Multer } from "multer";
 import cloudinary from "../core/cloudinary";
 import { UploadFileModel } from "../models";
@@ -47,7 +47,7 @@ class UploadController {
                   file: fileObj,
                 });
               })
-              .catch((err: any) => {
+              .catch((err: ErrorRequestHandler) => {
                 res.json({
                   status: "error",
                   message: err,
@@ -59,8 +59,8 @@ class UploadController {
   };
 
   delete = (req: RequestUserExtended, res: Response): void => {
-    const fileId: string = req.user._id;
-    UploadFileModel.deleteOne({ _id: fileId }, function (err: any) {
+    const fileId = req.query.id;
+    UploadFileModel.deleteOne({ _id: fileId }, (err) => {
       if (err) {
         return res.status(500).json({
           status: "error",

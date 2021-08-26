@@ -7,14 +7,17 @@
     <title>Document</title>
   </head>
   <body>
-    <script src="/socket.io/socket.io.js"></script>
+    <script
+      src="https://cdn.socket.io/4.1.2/socket.io.min.js"
+      integrity="sha384-toS6mmwu70G0fw54EGlWWeA4z3dyJ+dlXBtSURSKN4vyRFOcxd3Bzjj/AoOwY+Rg"
+      crossorigin="anonymous"
+    ></script>
     <script>
-      window.onload = function () {
-        const socket = io("http://localhost:3000");
-
+      window.onload = () => {
+        const socket = io("http://localhost:3003");
         window.socket = socket;
-        socket.on("SERVER:NEW_MESSAGE", function (msg) {
-          if (window.user !== msg.user) {
+        socket.on("SERVER:NEW_MESSAGE", (msg) => {
+          if (window.user !== msg.sender) {
             console.log(msg);
           }
         });

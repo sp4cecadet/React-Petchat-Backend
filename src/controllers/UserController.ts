@@ -1,4 +1,6 @@
-import express, { Request, Response } from "express";
+import express, { ErrorRequestHandler, Request, Response } from "express";
+import { ParsedQs } from "qs";
+
 import { validationResult, Result, ValidationError } from "express-validator";
 import bcrypt from "bcrypt";
 import { SentMessageInfo } from "nodemailer/lib/sendmail-transport";
@@ -9,6 +11,7 @@ import { IUser } from "../models/User";
 import { createJWToken } from "../utils/";
 import mailer from "../core/mailer";
 import { RequestUserExtended } from "../types";
+import { Query } from "mongoose";
 
 class UserController {
   io: socket.Server;
@@ -30,7 +33,7 @@ class UserController {
 
   getMe(req: RequestUserExtended, res: Response) {
     const id: string = req.user._id;
-    UserModel.findById(id)
+    UserModel.findById(id, { password: 0, confirm_hash: 0 })
       .then((user: IUser | null) => {
         res.json(user);
       })
@@ -43,18 +46,21 @@ class UserController {
 
   findUsers = (req: Request, res: Response): void => {
     const query: any = req.query.query;
-    UserModel.find()
-      .or([
-        { fullname: new RegExp(query, "i") },
-        { email: new RegExp(query, "i") },
-      ])
-      .then((users: IUser[]) => res.json(users))
-      .catch((err: any) => {
-        return res.status(404).json({
-          status: "error",
-          message: err,
+    query &&
+      UserModel.find()
+        .or([
+          { fullname: new RegExp(query, "i") },
+          { email: new RegExp(query, "i") },
+        ])
+        .then((users: IUser[]) => {
+          res.json(users);
+        })
+        .catch((err) => {
+          return res.status(404).json({
+            status: "error",
+            message: err,
+          });
         });
-      });
   };
 
   register(req: Request, res: Response) {
@@ -120,64 +126,70 @@ class UserController {
     if (!errors.isEmpty()) {
       res.status(422).json({ errors: errors.array() });
     } else {
-      UserModel.findOne({ email: postData.email }, (err: any, user: IUser) => {
-        if (err || !user) {
-          return res.status(404).json({
-            message: "Пользователь не найден",
-          });
-        }
+      UserModel.findOne(
+        { email: postData.email },
+        (err: ErrorRequestHandler, user: IUser) => {
+          if (err || !user) {
+            return res.status(404).json({
+              message: "Пользователь не найден",
+            });
+          }
 
-        if (bcrypt.compareSync(postData.password, user.password)) {
-          const token = createJWToken(user);
-          res.json({
-            status: "success",
-            token,
-          });
-        } else {
-          res.status(403).json({
-            status: "error",
-            message: "Неправильный e-mail или пароль",
-          });
+          if (bcrypt.compareSync(postData.password, user.password)) {
+            const token = createJWToken(user);
+            res.json({
+              status: "success",
+              token,
+            });
+          } else {
+            res.status(403).json({
+              status: "error",
+              message: "Неправильный e-mail или пароль",
+            });
+          }
         }
-      });
+      );
     }
   }
 
   verify(req: Request, res: Response) {
-    const hash: any = req.query.hash;
+    const hash: ParsedQs = req.query.hash as ParsedQs;
 
     if (!hash) {
       res.status(422).json({ errors: "Invalid hash" });
     } else {
-      UserModel.findOne({ confirm_hash: hash }, (err: any, user: IUser) => {
-        if (err || !user) {
-          return res.status(404).json({
-            status: "error",
-            message: "Hash not found",
-          });
-        }
-        if (user.confirmed === true) {
-          res.json({
-            status: "success",
-            message: "Аккаунт уже был подтверждён",
-          });
-        } else {
-          user.confirmed = true;
-          user.save((err: any) => {
-            if (err) {
-              return res.status(404).json({
-                status: "error",
-                message: err,
-              });
-            }
-
+      UserModel.findOne(
+        { confirm_hash: hash },
+        (err: ErrorRequestHandler, user: IUser) => {
+          if (err || !user) {
+            return res.status(404).json({
+              status: "error",
+              message: "Hash not found",
+            });
+          }
+          if (user.confirmed === true) {
             res.json({
               status: "success",
-              message: "Аккаунт успешно подтвержден!",
+              message: "Аккаунт уже был подтверждён",
             });
-          });
+          } else {
+            user.confirmed = true;
+            user.save((err) => {
+              if (err) {
+                return res.status(404).json({
+                  status: "error",
+                  message: err,
+                });
+              }
+
+              res.json({
+                status: "success",
+                message: "Аккаунт успешно подтвержден!",
+              });
+            });
+          }
         }
-      });
+      );
     }
   }
 }

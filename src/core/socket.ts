@@ -1,9 +1,13 @@
 import http from "http";
 
 export default (http: http.Server) => {
-  const io = require("socket.io")(http);
+  const io = require("socket.io")(http, {
+    cors: {
+      origin: "*",
+    },
+  });
 
-  io.on("connection", function (socket: any) {
+  io.on("connection", (socket: any) => {
     socket.on("DIALOGS:JOIN", (dialogId: string) => {
       socket.dialogId = dialogId;
       socket.join(dialogId);

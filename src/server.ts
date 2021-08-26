@@ -1,4 +1,4 @@
-import express, { NextFunction, Response } from "express";
+import express from "express";
 import { createServer } from "http";
 import mongoose from "mongoose";
 
@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 
 import createRoutes from "./core/routes";
 import createSocket from "./core/socket";
+import cors from "cors";
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ const http = createServer(app);
 const io = createSocket(http);
 
 createRoutes(app, io);
+
+app.use(cors());
 
 mongoose.connect(
   "mongodb://localhost:27017/" + process.env.DBNAME,
