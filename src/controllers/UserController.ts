@@ -8,10 +8,9 @@ import socket from "socket.io";
 
 import { UserModel } from "../models/";
 import { IUser } from "../models/User";
-import { createJWToken } from "../utils/";
+import { createJWToken, checkIfEmailUsed } from "../utils/";
 import mailer from "../core/mailer";
 import { RequestUserExtended } from "../types";
-import { Query } from "mongoose";
 
 class UserController {
   io: socket.Server;
@@ -70,38 +69,44 @@ class UserController {
       password: req.body.password,
     };
 
-    const errors = validationResult(req);
+    checkIfEmailUsed(postData.email).then((exists) => {
+      if (exists) {
+        res.json({ status: "exists", message: "E-mail уже используется" });
+      } else {
+        const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
-    } else {
-      const user = new UserModel(postData);
+        if (!errors.isEmpty()) {
+          res.status(422).json({ errors: errors.array() });
+        } else {
+          const user = new UserModel(postData);
 
-      user
-        .save()
-        .then((obj: IUser) => {
-          res.json(obj);
-          mailer.sendMail(
-            {
-              from: "admin@test.com",
-              to: postData.email,
-              subject: "Подтверждение почты React Chat Tutorial",
-              html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:3003/verify?hash=${obj.confirm_hash}">по этой ссылке</a>`,
-            },
-            function (err: Error | null, info: SentMessageInfo) {
-              if (err) {
-                console.log(err);
-              }
-            }
-          );
-        })
-        .catch((reason) => {
-          res.status(500).json({
-            status: "error",
-            message: reason,
-          });
-        });
-    }
+          user
+            .save()
+            .then((obj: IUser) => {
+              res.status(201).json(obj);
+              mailer.sendMail(
+                {
+                  from: "admin@test.com",
+                  to: postData.email,
+                  subject: "Подтверждение почты React Chat Tutorial",
+                  html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:3003/user/verify?hash=${obj.confirm_hash}">по этой ссылке</a>`,
+                },
+                function (err: Error | null, info: SentMessageInfo) {
+                  if (err) {
+                    console.log(err);
+                  }
+                }
+              );
+            })
+            .catch((reason) => {
+              res.status(500).json({
+                status: "error",
+                message: reason,
+              });
+            });
+        }
+      }
+    });
   }
 
   delete(req: Request, res: Response) {
@@ -137,7 +142,7 @@ class UserController {
 
           if (bcrypt.compareSync(postData.password, user.password)) {
             const token = createJWToken(user);
-            res.json({
+            res.status(200).json({
               status: "success",
               token,
             });
@@ -154,9 +159,10 @@ class UserController {
 
   verify(req: Request, res: Response) {
     const hash: ParsedQs = req.query.hash as ParsedQs;
-
     if (!hash) {
-      res.status(422).json({ errors: "Invalid hash" });
+      res
+        .status(422)
+        .json({ errors: "Неправильнная ссылка для подтверждения" });
     } else {
       UserModel.findOne(
         { confirm_hash: hash },
@@ -164,12 +170,12 @@ class UserController {
           if (err || !user) {
             return res.status(404).json({
               status: "error",
-              message: "Hash not found",
+              message: "Неправильная ссылка для подтверждения",
             });
           }
-          if (user.confirmed === true) {
-            res.json({
-              status: "success",
+          if (user.confirmed && user.confirmed === true) {
+            return res.status(200).json({
+              status: "verified",
               message: "Аккаунт уже был подтверждён",
             });
           } else {
@@ -182,7 +188,7 @@ class UserController {
                 });
               }
 
-              res.json({
+              res.status(200).json({
                 status: "success",
                 message: "Аккаунт успешно подтвержден!",
               });

@@ -18,7 +18,6 @@ const DialogSchema = new Schema(
   {
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     partner: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    messages: Array,
     lastMessage: { type: Schema.Types.ObjectId, ref: "Message" },
   },
   {

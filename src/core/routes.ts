@@ -19,21 +19,20 @@ const createRoutes = (app: Express, io: socket.Server) => {
   const Message = new MessageController(io);
   const File = new UploadController();
 
-  app.get("/", (req: Request, res: Response) => {
-    res.send({});
-  });
-
   app.use(bodyParser.json());
   app.use(checkAuth);
   app.use(updateLastSeen);
 
+  app.get("/", (_: Request, res: Response) => {
+    res.send({});
+  });
   // User requests block
   app.get("/user/me", User.getMe);
+  app.get("/user/verify", User.verify);
   app.get("/user/find", User.findUsers);
   app.get("/user/:id", User.index);
-  app.get("/verify", User.verify);
-  app.post("/signup", RegisterValidation, User.register);
   app.post("/signin", LoginValidation, User.login);
+  app.post("/signup", RegisterValidation, User.register);
   app.delete("/user/:id", User.delete);
   // =====================
 

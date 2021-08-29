@@ -18,12 +18,16 @@ class DialogController {
 
     DialogModel.find()
       .or([{ author: userId }, { partner: userId }])
-      .populate(["author", "partner"])
+      .populate({
+        path: "author",
+        select: ["isOnline", "fullname", "last_seen", "avatar"],
+      })
+      .populate({
+        path: "partner",
+        select: ["isOnline", "fullname", "last_seen", "avatar"],
+      })
       .populate({
         path: "lastMessage",
-        populate: {
-          path: "user",
-        },
       })
       .then((dialogs: IDialog[] | null) => {
         res.json(dialogs);
@@ -33,7 +37,7 @@ class DialogController {
       });
   }
 
-  create(req: RequestUserExtended, res: Response) {
+  create = (req: RequestUserExtended, res: Response) => {
     const postData = {
       author: req.user._id,
       partner: req.body.partner,
@@ -69,6 +73,10 @@ class DialogController {
                     dialog: dialog,
                     message: message,
                   });
+                  this.io.emit("SERVER:DIALOG_CREATED", {
+                    ...postData,
+                    dialog: dialog,
+                  });
                 });
               })
               .catch((err: { [key: string]: any }) => res.json(err.message));
@@ -76,7 +84,7 @@ class DialogController {
           .catch((err: { [key: string]: any }) => res.json(err.message));
       }
     });
-  }
+  };
 
   delete(req: Request, res: Response) {
     const id = req.query.id;

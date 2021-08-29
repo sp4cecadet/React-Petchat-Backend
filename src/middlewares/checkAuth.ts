@@ -11,7 +11,7 @@ export default (req: Request, res: Response, next: NextFunction): void => {
   if (
     req.path === "/signin" ||
     req.path === "/signup" ||
-    req.path === "/verify"
+    req.path === "/user/verify"
   ) {
     return next();
   }
@@ -32,10 +32,5 @@ export default (req: Request, res: Response, next: NextFunction): void => {
           .status(403)
           .json({ message: "Ошибка токена. Попробуйте очистить cookies." });
       });
-  } else {
-    res.status(403).json({
-      status: "error",
-      message: "Ошибка токена. Попробуйте очистить cookies.",
-    });
   }
 };

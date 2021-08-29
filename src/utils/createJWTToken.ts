@@ -26,5 +26,4 @@ export default (user: ILoginData) => {
       algorithm: "HS256",
     }
   );
-
 };
