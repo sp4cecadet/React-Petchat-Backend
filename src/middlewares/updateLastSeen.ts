@@ -9,7 +9,9 @@ export default (
   if (req.user) {
     UserModel.findOneAndUpdate(
       { _id: req.user._id },
-      { last_seen: new Date() },
+      {
+        last_seen: new Date(),
+      },
       { upsert: true },
       (err) => {
         if (err) {

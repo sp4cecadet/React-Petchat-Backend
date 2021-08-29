@@ -1,5 +1,5 @@
-import { ErrorRequestHandler, Request, Response } from "express";
-import { Mongoose, ObjectId } from "mongoose";
+import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { ObjectId } from "mongoose";
 import socket from "socket.io";
 import { DialogModel, MessageModel } from "../models/";
 import { IDialog } from "../models/Dialog";
@@ -44,7 +44,7 @@ class MessageController {
     this.updateReadStatus(res, senderId, dialogId);
 
     MessageModel.find({ dialog: dialogId })
-      .populate(["dialog", "user", "attachments"])
+      .populate(["dialog", "sender", "attachments"])
       .exec((err, messages) => {
         if (err) {
           return res.status(404).json({
@@ -73,7 +73,7 @@ class MessageController {
     message
       .save()
       .then((obj: IMessage) => {
-        obj.populate("Attachments", (err: any, message: IMessage) => {
+        obj.populate("sender", (err: any, message: IMessage) => {
           if (err) {
             return res.status(500).json({
               status: "error",
@@ -96,7 +96,6 @@ class MessageController {
           );
 
           res.json(message);
-
           this.io.emit("SERVER:NEW_MESSAGE", message);
         });
       })

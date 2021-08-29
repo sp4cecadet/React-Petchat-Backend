@@ -13,15 +13,12 @@
       crossorigin="anonymous"
     ></script>
     <script>
-      window.onload = () => {
-        const socket = io("http://localhost:3003");
-        window.socket = socket;
-        socket.on("SERVER:NEW_MESSAGE", (msg) => {
-          if (window.user !== msg.sender) {
-            console.log(msg);
-          }
-        });
-      };
+      window.socket = socket;
+      socket.on("SERVER:NEW_MESSAGE", function (msg) {
+        if (window.user !== msg.user) {
+          console.log(msg);
+        }
+      });
     </script>
   </body>
 </html>
