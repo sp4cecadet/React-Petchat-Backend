@@ -58,7 +58,6 @@ class MessageController {
 
   create = (req: Request, res: Response): void => {
     const userId: string = req.user._id;
-
     const postData = {
       text: req.body.text,
       dialog: req.body.dialog_id,
@@ -67,8 +66,7 @@ class MessageController {
     };
 
     const message = new MessageModel(postData);
-
-    this.updateReadStatus(res, userId, req.body.dialog_id);
+    // this.updateReadStatus(res, userId, req.body.dialog_id);
 
     message
       .save()
