@@ -110,7 +110,7 @@ class MessageController {
       if (err || !message) {
         return res.status(404).json({
           status: "error",
-          message: "Message not found",
+          message: "Сообщение не найдено",
         });
       }
 
@@ -158,8 +158,10 @@ class MessageController {
 
                 res.json({
                   status: "success",
-                  message: "Message deleted",
+                  message: "Сообщение было удалено",
                 });
+
+                this.io.emit("SERVER:MESSAGE_REMOVED");
               }
             );
           }
