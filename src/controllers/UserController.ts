@@ -22,6 +22,7 @@ class UserController {
   index(req: Request, res: Response) {
     const id: string = req.params.id;
     UserModel.findById(id)
+      .populate("avatar")
       .then((user: IUser | null) => {
         res.json(user);
       })

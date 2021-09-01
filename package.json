@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "set NODE_ENV=development && ts-node-dev ./src/server.ts"
+    "start": "ts-node-dev ./src/server.ts"
   },
   "author": "",
   "license": "ISC",

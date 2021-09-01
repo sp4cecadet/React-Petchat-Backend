@@ -10,7 +10,10 @@ export interface IUser extends Document {
   password: string;
   confirmed: boolean;
   confirm_hash?: string;
-  avatar?: string;
+  avatar?: {
+    type: Schema.Types.ObjectId;
+    ref: "File";
+  };
   last_seen: Date;
 }
 
@@ -22,7 +25,7 @@ const UserSchema = new Schema(
       validate: [isEmail, "Адрес электронной почты должен быть указан верно"],
       unique: true,
     },
-    avatar: String,
+    avatar: { type: Schema.Types.ObjectId, ref: "File" },
     fullname: {
       type: String,
       required: "Необходимо ввести имя",

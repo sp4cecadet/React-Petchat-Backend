@@ -20,11 +20,13 @@ class DialogController {
       .or([{ author: userId }, { partner: userId }])
       .populate({
         path: "author",
-        select: ["isOnline", "fullname", "last_seen", "avatar"],
+        select: ["isOnline", "fullname", "last_seen"],
+        populate: { path: "avatar" },
       })
       .populate({
         path: "partner",
-        select: ["isOnline", "fullname", "last_seen", "avatar"],
+        select: ["isOnline", "fullname", "last_seen"],
+        populate: { path: "avatar" },
       })
       .populate({
         path: "lastMessage",

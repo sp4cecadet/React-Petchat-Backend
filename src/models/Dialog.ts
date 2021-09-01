@@ -11,7 +11,7 @@ export interface IDialog extends Document {
     ref: "User";
   };
   messages: IMessage[];
-  lastMessage: IMessage | string | undefined;
+  lastMessage: IMessage | string | null;
 }
 
 const DialogSchema = new Schema(
