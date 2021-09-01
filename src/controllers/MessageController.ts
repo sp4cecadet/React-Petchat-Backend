@@ -45,7 +45,8 @@ class MessageController {
     this.updateReadStatus(res, senderId, dialogId);
 
     MessageModel.find({ dialog: dialogId })
-      .populate(["dialog", "sender", "attachments"])
+      .populate(["dialog", "attachments"])
+      .populate({ path: "sender", populate: { path: "avatar" } })
       .exec((err, messages) => {
         if (err) {
           return res.status(404).json({
@@ -71,31 +72,34 @@ class MessageController {
     message
       .save()
       .then((obj: IMessage) => {
-        obj.populate("sender", (err: any, message: IMessage) => {
-          if (err) {
-            return res.status(500).json({
-              status: "error",
-              message: err,
-            });
-          }
-
-          DialogModel.findOneAndUpdate(
-            { _id: postData.dialog },
-            { lastMessage: message._id },
-            { upsert: true },
-            (err) => {
-              if (err) {
-                return res.status(500).json({
-                  status: "error",
-                  message: err,
-                });
-              }
+        obj.populate(
+          { path: "sender", populate: { path: "avatar" } },
+          (err: any, message: IMessage) => {
+            if (err) {
+              return res.status(500).json({
+                status: "error",
+                message: err,
+              });
             }
-          );
 
-          res.json(message);
-          this.io.emit("SERVER:NEW_MESSAGE", message);
-        });
+            DialogModel.findOneAndUpdate(
+              { _id: postData.dialog },
+              { lastMessage: message._id },
+              { upsert: true },
+              (err) => {
+                if (err) {
+                  return res.status(500).json({
+                    status: "error",
+                    message: err,
+                  });
+                }
+              }
+            );
+
+            res.json(message);
+            this.io.emit("SERVER:NEW_MESSAGE", message);
+          }
+        );
       })
       .catch((reason) => {
         res.json(reason);
@@ -123,7 +127,7 @@ class MessageController {
         MessageModel.findOne(
           { dialog: dialogId },
           {},
-          { sort: { created_at: -1 } },
+          { sort: { createdAt: -1 } },
           (err, lastMessage) => {
             if (err) {
               res.status(500).json({
@@ -131,7 +135,6 @@ class MessageController {
                 message: err,
               });
             }
-
             DialogModel.findById(
               dialogId,
               (err: ErrorRequestHandler, dialog: IDialog) => {
@@ -149,19 +152,17 @@ class MessageController {
                   });
                 }
 
-                dialog.lastMessage = lastMessage || undefined;
+                dialog.lastMessage = lastMessage || null;
                 dialog
                   .save()
                   .catch((err) =>
                     res.json({ message: "error", err: err.message })
                   );
 
-                res.json({
+                return res.json({
                   status: "success",
                   message: "Сообщение было удалено",
                 });
-
-                this.io.emit("SERVER:MESSAGE_REMOVED");
               }
             );
           }

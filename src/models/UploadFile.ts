@@ -28,7 +28,7 @@ const UploadFileSchema = new Schema(
 );
 
 const UploadFileModel = mongoose.model<IUploadFileDocument>(
-  "UploadFile",
+  "File",
   UploadFileSchema
 );
 
