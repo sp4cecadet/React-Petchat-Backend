@@ -4,6 +4,7 @@ import socket from "socket.io";
 import { DialogModel, MessageModel } from "../models/";
 import { IDialog } from "../models/Dialog";
 import { IMessage } from "../models/Message";
+import { IUser } from "../models/User";
 import { RequestUserExtended } from "../types";
 
 class MessageController {
@@ -15,11 +16,11 @@ class MessageController {
 
   updateReadStatus = (
     res: Response,
-    senderId: ObjectId | string,
+    senderId: IUser["_id"] | string,
     dialogId: IDialog["_id"]
   ): void => {
     MessageModel.updateMany(
-      { dialog: dialogId, user: { $ne: senderId } },
+      { dialog: dialogId, sender: { $ne: senderId } },
       { $set: { readed: true } }
     )
       .then(() => {
@@ -49,7 +50,7 @@ class MessageController {
         if (err) {
           return res.status(404).json({
             status: "error",
-            message: "Messages not found",
+            message: "Нет сообщений",
           });
         }
         res.json(messages);
@@ -66,7 +67,6 @@ class MessageController {
     };
 
     const message = new MessageModel(postData);
-    // this.updateReadStatus(res, userId, req.body.dialog_id);
 
     message
       .save()
@@ -169,7 +169,7 @@ class MessageController {
       } else {
         return res.status(403).json({
           status: "error",
-          message: "Not have permission",
+          message: "У вас нет прав на выполнение этого действия",
         });
       }
     });
