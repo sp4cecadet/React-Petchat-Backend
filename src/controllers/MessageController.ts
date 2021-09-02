@@ -54,6 +54,7 @@ class MessageController {
             message: "Нет сообщений",
           });
         }
+
         res.json(messages);
       });
   };
@@ -69,37 +70,42 @@ class MessageController {
 
     const message = new MessageModel(postData);
 
+    this.updateReadStatus(res, userId, req.body.dialog_id);
+
     message
       .save()
       .then((obj: IMessage) => {
-        obj.populate(
-          { path: "sender", populate: { path: "avatar" } },
-          (err: any, message: IMessage) => {
-            if (err) {
-              return res.status(500).json({
-                status: "error",
-                message: err,
-              });
-            }
-
-            DialogModel.findOneAndUpdate(
-              { _id: postData.dialog },
-              { lastMessage: message._id },
-              { upsert: true },
-              (err) => {
-                if (err) {
-                  return res.status(500).json({
-                    status: "error",
-                    message: err,
-                  });
-                }
+        obj
+          .populate("attachments")
+          .populate(
+            { path: "sender", populate: { path: "avatar" } },
+            (err: any, message: IMessage) => {
+              if (err) {
+                return res.status(500).json({
+                  status: "error",
+                  message: err,
+                });
               }
-            );
 
-            res.json(message);
-            this.io.emit("SERVER:NEW_MESSAGE", message);
-          }
-        );
+              DialogModel.findOneAndUpdate(
+                { _id: postData.dialog },
+                { lastMessage: message._id },
+                { upsert: true },
+                (err) => {
+                  if (err) {
+                    return res.status(500).json({
+                      status: "error",
+                      message: err,
+                    });
+                  }
+                }
+              );
+
+              res.json(message);
+
+              this.io.emit("SERVER:NEW_MESSAGE", message);
+            }
+          );
       })
       .catch((reason) => {
         res.json(reason);
