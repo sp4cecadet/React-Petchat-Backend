@@ -30,6 +30,7 @@ class DialogController {
       })
       .populate({
         path: "lastMessage",
+        populate: { path: "attachments" },
       })
       .then((dialogs: IDialog[] | null) => {
         res.json(dialogs);
