@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { IUser } from "./User";
 import { IMessage } from "./Message";
 
-export interface IUploadFile {
+export interface IUploadFile extends Document {
   filename: string;
   size: number;
   ext: string;

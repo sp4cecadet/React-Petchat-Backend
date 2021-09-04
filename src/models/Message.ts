@@ -11,10 +11,12 @@ export interface IMessage extends Document {
     type: Schema.Types.ObjectId;
     ref: "User";
   };
-  attachments?: {
-    type: Schema.Types.ObjectId;
-    ref: "File";
-  };
+  attachments?: [
+    {
+      type: Schema.Types.ObjectId;
+      ref: "File";
+    }
+  ];
 }
 
 const MessageSchema = new Schema(

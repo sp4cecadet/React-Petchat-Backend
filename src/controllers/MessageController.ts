@@ -1,10 +1,11 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
-import { ObjectId } from "mongoose";
+import { ErrorRequestHandler, Request, Response } from "express";
+import { ObjectId, Schema } from "mongoose";
 import socket from "socket.io";
-import { DialogModel, MessageModel } from "../models/";
+import { DialogModel, MessageModel, UploadFileModel } from "../models/";
 import { IDialog } from "../models/Dialog";
 import { IMessage } from "../models/Message";
 import { IUser } from "../models/User";
+import { IUploadFile } from "../models/UploadFile";
 import { RequestUserExtended } from "../types";
 
 class MessageController {
@@ -126,6 +127,16 @@ class MessageController {
 
       if (message.sender.toString() === userId) {
         const dialogId = message.dialog;
+
+        message.attachments &&
+          message.attachments.forEach(
+            (id: { type: Schema.Types.ObjectId; ref: "File" }) => {
+              UploadFileModel.findByIdAndRemove(id).catch((err) =>
+                console.log(err)
+              );
+            }
+          );
+
         message
           .remove()
           .catch((err) => res.json({ message: "error", err: err.message }));
