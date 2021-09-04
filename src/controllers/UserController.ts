@@ -48,10 +48,7 @@ class UserController {
     const query: any = req.query.query;
     query &&
       UserModel.find()
-        .or([
-          { fullname: new RegExp(query, "i") },
-          { email: new RegExp(query, "i") },
-        ])
+        .or([{ fullname: new RegExp(query, "i") }])
         .then((users: IUser[]) => {
           res.json(users);
         })
