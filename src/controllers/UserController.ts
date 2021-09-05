@@ -84,10 +84,13 @@ class UserController {
               res.status(201).json(obj);
               mailer.sendMail(
                 {
-                  from: "admin@test.com",
+                  from: {
+                    name: "React Petchat",
+                    address: "react.petchat.mailer@gmail.com",
+                  },
                   to: postData.email,
-                  subject: "Подтверждение почты React Chat Tutorial",
-                  html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:3003/user/verify?hash=${obj.confirm_hash}">по этой ссылке</a>`,
+                  subject: "Подтверждение регистрации в React Petchat",
+                  html: `Для того, чтобы подтвердить почту, перейдите <a href="http://${process.env.HOSTNAME}:3000/user/verify?hash=${obj.confirm_hash}">по этой ссылке</a>`,
                 },
                 function (err: Error | null, info: SentMessageInfo) {
                   if (err) {

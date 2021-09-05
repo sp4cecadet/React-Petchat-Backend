@@ -14,11 +14,7 @@
     ></script>
     <script>
       window.socket = socket;
-      socket.on("SERVER:NEW_MESSAGE", function (msg) {
-        if (window.user !== msg.user) {
-          console.log(msg);
-        }
-      });
+      socket.on("SERVER:NEW_MESSAGE", function (msg) {});
     </script>
   </body>
 </html>

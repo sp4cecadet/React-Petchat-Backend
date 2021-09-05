@@ -23,7 +23,6 @@ class UploadController {
                 message: error || "upload error",
               });
             }
-            console.log(result);
             const fileData: Pick<
               cloudinary.UploadApiResponse,
               "filename" | "size" | "ext" | "url" | "user" | "duration"

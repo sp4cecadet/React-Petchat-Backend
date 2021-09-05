@@ -1,11 +1,12 @@
 import nodemailer from "nodemailer";
 
 const transport = nodemailer.createTransport({
-  host: "smtp.mailtrap.io",
-  port: 2525,
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
-    user: "23df49b1ad02d5",
-    pass: "678621c2d90b22",
+    user: "react.petchat.mailer@gmail.com",
+    pass: "89neteso",
   },
 });
 
