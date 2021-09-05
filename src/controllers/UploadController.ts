@@ -23,14 +23,15 @@ class UploadController {
                 message: error || "upload error",
               });
             }
-
+            console.log(result);
             const fileData: Pick<
               cloudinary.UploadApiResponse,
-              "filename" | "size" | "ext" | "url" | "user"
+              "filename" | "size" | "ext" | "url" | "user" | "duration"
             > = {
               filename: result.original_filename,
               size: result.bytes,
               ext: result.format,
+              duration: result.duration,
               url: result.url,
               user: userId,
             };
