@@ -6,7 +6,7 @@ const transport = nodemailer.createTransport({
   secure: false,
   auth: {
     user: "react.petchat.mailer@gmail.com",
-    pass: "89neteso",
+    pass: "##SJO00a7", // Please, don't hijack my email
   },
 });
 
