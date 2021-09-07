@@ -12,7 +12,7 @@ export default (
       {
         last_seen: new Date(),
       },
-      { upsert: true },
+      {},
       (err) => {
         if (err) {
           return res.status(500).json({

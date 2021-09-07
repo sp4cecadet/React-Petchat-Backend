@@ -35,19 +35,20 @@ class UserController {
     const id: string = req.user._id;
     UserModel.findById(id, { password: 0, confirm_hash: 0 })
       .then((user: IUser | null) => {
+        if (user === null) {
+          res.status(404).json({ message: "Пользователь не найден" });
+        }
         res.json(user);
       })
-      .catch(() =>
-        res.status(404).json({
-          message: "Пользователь не найден",
-        })
-      );
+      .catch(() => res.status(403));
   }
 
   findUsers = (req: Request, res: Response): void => {
     const query: any = req.query.query;
+    const userId = req.user._id;
+
     query &&
-      UserModel.find()
+      UserModel.find({ _id: { $ne: userId } })
         .or([{ fullname: new RegExp(query, "i") }])
         .then((users: IUser[]) => {
           res.json(users);

@@ -26,7 +26,6 @@ class MessageController {
     )
       .then(() => {
         this.io.emit("SERVER:MESSAGES_READED", {
-          senderId,
           dialogId,
         });
       })
@@ -176,6 +175,7 @@ class MessageController {
                     res.json({ message: "error", err: err.message })
                   );
 
+                this.io.emit("SERVER:MESSAGE_REMOVED");
                 return res.json({
                   status: "success",
                   message: "Сообщение было удалено",
