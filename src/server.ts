@@ -12,7 +12,7 @@ dotenv.config();
 
 const app = express();
 const http = createServer(app);
-const io = createSocket(http);
+export const io = createSocket(http);
 
 createRoutes(app, io);
 

@@ -1,12 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import socket from "../core/socket";
 
 import { IUser } from "../models/User";
 import { verifyJWTToken } from "../utils";
-
-interface CustomRequest extends Request {
-  user?: IUser;
-}
 
 export default (req: Request, res: Response, next: NextFunction): void => {
   if (

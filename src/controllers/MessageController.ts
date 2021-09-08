@@ -1,12 +1,11 @@
 import { ErrorRequestHandler, Request, Response } from "express";
-import { ObjectId, Schema } from "mongoose";
+import { Schema } from "mongoose";
 import socket from "socket.io";
 import { DialogModel, MessageModel, UploadFileModel } from "../models/";
 import { IDialog } from "../models/Dialog";
 import { IMessage } from "../models/Message";
-import { IUser } from "../models/User";
-import { IUploadFile } from "../models/UploadFile";
 import { RequestUserExtended } from "../types";
+import { updateMessagesStatus } from "../middlewares";
 
 class MessageController {
   io: socket.Server;
@@ -15,34 +14,9 @@ class MessageController {
     this.io = io;
   }
 
-  updateReadStatus = (
-    res: Response,
-    senderId: IUser["_id"] | string,
-    dialogId: IDialog["_id"]
-  ): void => {
-    MessageModel.updateMany(
-      { dialog: dialogId, sender: { $ne: senderId } },
-      { $set: { readed: true } }
-    )
-      .then(() => {
-        this.io.emit("SERVER:MESSAGES_READED", {
-          dialogId,
-        });
-      })
-      .catch((err) => {
-        console.log("readstatus[ERROR]: ", err);
-        res.status(500).json({
-          status: "error",
-          message: err,
-        });
-      });
-  };
-
   index = (req: Request, res: Response): void => {
     const dialogId: IDialog["_id"] = req.query.dialog;
-    const senderId: ObjectId | string = req.user._id;
-
-    this.updateReadStatus(res, senderId, dialogId);
+    const userId = req.user._id;
 
     MessageModel.find({ dialog: dialogId })
       .populate(["dialog", "attachments"])
@@ -53,6 +27,9 @@ class MessageController {
             status: "error",
             message: "Нет сообщений",
           });
+        }
+        if (this.io.sockets.adapter.rooms.has(dialogId)) {
+          updateMessagesStatus(userId, dialogId);
         }
 
         res.json(messages);
@@ -69,8 +46,6 @@ class MessageController {
     };
 
     const message = new MessageModel(postData);
-
-    this.updateReadStatus(res, userId, req.body.dialog_id);
 
     message
       .save()
