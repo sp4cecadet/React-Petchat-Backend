@@ -1,8 +1,9 @@
 import express from "express";
 import { UserModel } from "../models";
+import { RequestUserExtended } from "../types";
 
 export default (
-  req: express.Request,
+  req: RequestUserExtended,
   res: express.Response,
   next: express.NextFunction
 ) => {

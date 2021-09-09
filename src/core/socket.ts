@@ -32,7 +32,7 @@ export default (http: http.Server) => {
     socket.on("MESSAGES:FETCHED", ({ userId, dialogId }) => {
       updateMessagesStatus(userId, dialogId);
 
-      socket.broadcast.volatile.to(dialogId).emit("SERVER:MESSAGES_READED");
+      socket.broadcast.emit("SERVER:MESSAGES_READED", { dialogId });
     });
   });
 

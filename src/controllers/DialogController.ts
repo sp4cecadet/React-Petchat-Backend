@@ -5,7 +5,6 @@ import { DialogModel, MessageModel } from "../models/";
 import { IDialog } from "../models/Dialog";
 import { RequestUserExtended } from "../types";
 import { IMessage } from "../models/Message";
-import { updateMessagesStatus } from "../middlewares";
 
 class DialogController {
   io: socket.Server;

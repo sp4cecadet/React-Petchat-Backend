@@ -1,4 +1,4 @@
-import { ErrorRequestHandler, Request, Response } from "express";
+import { ErrorRequestHandler, Response } from "express";
 import { Multer } from "multer";
 import cloudinary from "../core/cloudinary";
 import { UploadFileModel } from "../models";
@@ -6,7 +6,7 @@ import { IUploadFile, IUploadFileDocument } from "../models/UploadFile";
 import { RequestUserExtended } from "../types";
 
 class UploadController {
-  create = (req: Request, res: Response): void => {
+  create = (req: RequestUserExtended, res: Response): void => {
     const userId = req.user._id;
     const file: Express.Multer.File | undefined = req.file;
     file &&

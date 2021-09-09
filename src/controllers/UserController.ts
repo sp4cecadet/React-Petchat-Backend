@@ -1,4 +1,4 @@
-import express, { ErrorRequestHandler, Request, Response } from "express";
+import { ErrorRequestHandler, Request, Response } from "express";
 import { ParsedQs } from "qs";
 
 import { validationResult, Result, ValidationError } from "express-validator";
@@ -43,7 +43,7 @@ class UserController {
       .catch(() => res.status(403));
   }
 
-  findUsers = (req: Request, res: Response): void => {
+  findUsers = (req: RequestUserExtended, res: Response): void => {
     const query: any = req.query.query;
     const userId = req.user._id;
 

@@ -1,9 +1,13 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 
-import { IUser } from "../models/User";
+import { RequestUserExtended } from "../types";
 import { verifyJWTToken } from "../utils";
 
-export default (req: Request, res: Response, next: NextFunction): void => {
+export default (
+  req: RequestUserExtended,
+  res: Response,
+  next: NextFunction
+): void => {
   if (
     req.path === "/signin" ||
     req.path === "/signup" ||

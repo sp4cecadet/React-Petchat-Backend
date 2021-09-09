@@ -14,7 +14,7 @@ class MessageController {
     this.io = io;
   }
 
-  index = (req: Request, res: Response): void => {
+  index = (req: RequestUserExtended, res: Response): void => {
     const dialogId: IDialog["_id"] = req.query.dialog;
     const userId = req.user._id;
 
@@ -36,7 +36,7 @@ class MessageController {
       });
   };
 
-  create = (req: Request, res: Response): void => {
+  create = (req: RequestUserExtended, res: Response): void => {
     const userId: string = req.user._id;
     const postData = {
       text: req.body.text,

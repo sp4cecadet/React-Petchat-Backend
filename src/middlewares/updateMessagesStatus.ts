@@ -6,5 +6,5 @@ export default (userId: IUser["_id"], dialogId: IDialog["_id"]): void => {
   MessageModel.updateMany(
     { dialog: dialogId, sender: { $ne: userId } },
     { $set: { readed: true } }
-  ).catch((err) => console.error(err));
+  );
 };
