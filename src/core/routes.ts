@@ -34,6 +34,7 @@ const createRoutes = (app: Express, io: socket.Server) => {
   app.post("/signin", LoginValidation, User.login);
   app.post("/signup", RegisterValidation, User.register);
   app.delete("/user/:id", User.delete);
+  app.put("/user", User.update);
   // =====================
 
   // Dialog requests block

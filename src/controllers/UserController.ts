@@ -34,6 +34,7 @@ class UserController {
   getMe(req: RequestUserExtended, res: Response) {
     const id: string = req.user._id;
     UserModel.findById(id, { password: 0, confirm_hash: 0 })
+      .populate("avatar")
       .then((user: IUser | null) => {
         if (user === null) {
           res.status(404).json({ message: "Пользователь не найден" });
@@ -199,6 +200,23 @@ class UserController {
         }
       );
     }
+  }
+
+  update(req: RequestUserExtended, res: Response) {
+    const id: string = req.user._id;
+    const newData = {
+      fullname: req.body.fullname,
+      avatar: req.body.avatar,
+    };
+
+    UserModel.findByIdAndUpdate(id, newData)
+      .then((user: IUser | null) => {
+        if (user === null) {
+          res.status(404).json({ message: "Пользователь не найден" });
+        }
+        res.json(user);
+      })
+      .catch(() => res.status(403));
   }
 }
 
