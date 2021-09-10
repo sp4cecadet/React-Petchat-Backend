@@ -19,7 +19,7 @@ createRoutes(app, io);
 app.use(cors());
 
 mongoose.connect(
-  "mongodb://localhost:27017/" + process.env.DBNAME,
+  `mongodb://${process.env.HOSTNAME}:27017/` + process.env.DBNAME,
   {
     useCreateIndex: true,
     useNewUrlParser: true,
