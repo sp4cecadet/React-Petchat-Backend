@@ -28,9 +28,13 @@ class MessageController {
             message: "Нет сообщений",
           });
         }
-        if (this.io.sockets.adapter.rooms.has(dialogId)) {
-          updateMessagesStatus(userId, dialogId);
-        }
+
+        updateMessagesStatus(userId, dialogId);
+
+        this.io.emit("SERVER:MESSAGES_READED", {
+          userId,
+          dialogId,
+        });
 
         res.json(messages);
       });
@@ -77,6 +81,7 @@ class MessageController {
               );
 
               res.json(message);
+              updateMessagesStatus(userId, postData.dialog);
 
               this.io.emit("SERVER:NEW_MESSAGE", message);
             }

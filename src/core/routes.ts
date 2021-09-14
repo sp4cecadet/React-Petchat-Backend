@@ -1,6 +1,6 @@
-import bodyParser from "body-parser";
-import { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import socket from "socket.io";
+import cors from "cors";
 
 import { checkAuth, updateLastSeen } from "../middlewares";
 import {
@@ -19,13 +19,13 @@ const createRoutes = (app: Express, io: socket.Server) => {
   const Message = new MessageController(io);
   const File = new UploadController();
 
-  app.use(bodyParser.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
+  app.use(cors());
+
   app.use(checkAuth);
   app.use(updateLastSeen);
 
-  app.get("/", (_: Request, res: Response) => {
-    res.send({});
-  });
   // User requests block
   app.get("/user/me", User.getMe);
   app.get("/user/verify", User.verify);
